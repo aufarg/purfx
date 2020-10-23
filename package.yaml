@@ -1,0 +1,30 @@
+name:                toy-language
+version:             0.1.0.0
+git:                 "aufarg/toy-language"
+license:             BSD3
+author:              "Aufar Gilbran"
+maintainer:          "aufargilbran@gmail.com"
+
+dependencies:
+- base >= 4.7 && < 5
+- containers
+- parsec >= 3.0 && < 4
+- mtl
+- llvm-hs
+- llvm-hs-pure
+- bytestring
+
+library:
+  source-dirs: src
+
+executables:
+  tc:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    ld-options: -fuse-ld=lld -static
+    dependencies:
+    - toy-language
