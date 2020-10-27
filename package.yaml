@@ -1,9 +1,10 @@
-name:                toy-language
+name:                purfx
 version:             0.1.0.0
-git:                 "aufarg/toy-language"
+git:                 "aufarg/purfx"
 license:             BSD3
 author:              "Aufar Gilbran"
 maintainer:          "aufargilbran@gmail.com"
+description:         Please see the README on GitHub at <https://github.com/aufarg/purfx#readme>
 
 dependencies:
 - base >= 4.7 && < 5
@@ -13,12 +14,13 @@ dependencies:
 - llvm-hs
 - llvm-hs-pure
 - bytestring
+- optparse-applicative
 
 library:
   source-dirs: src
 
 executables:
-  tc:
+  pfc:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -27,4 +29,4 @@ executables:
     - -with-rtsopts=-N
     ld-options: -fuse-ld=lld -static
     dependencies:
-    - toy-language
+    - purfx

@@ -4,10 +4,11 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1e452ea384dbb19538d66835b51e4cd5fd1af655098151d7b8736981e38d15ab
+-- hash: 4244a8233dc82e0dc474dbcc9b997717a8901097247e7cfb2915f84c73cfb612
 
-name:           toy-language
+name:           purfx
 version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/aufarg/purfx#readme>
 author:         Aufar Gilbran
 maintainer:     aufargilbran@gmail.com
 license:        BSD3
@@ -16,7 +17,7 @@ build-type:     Simple
 
 source-repository head
   type: git
-  location: aufarg/toy-language
+  location: aufarg/purfx
 
 library
   exposed-modules:
@@ -25,7 +26,7 @@ library
       Parser
       Syntax
   other-modules:
-      Paths_toy_language
+      Paths_purfx
   hs-source-dirs:
       src
   build-depends:
@@ -35,13 +36,14 @@ library
     , llvm-hs
     , llvm-hs-pure
     , mtl
+    , optparse-applicative
     , parsec >=3.0 && <4
   default-language: Haskell2010
 
-executable tc
+executable pfc
   main-is: Main.hs
   other-modules:
-      Paths_toy_language
+      Paths_purfx
   hs-source-dirs:
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
@@ -53,6 +55,7 @@ executable tc
     , llvm-hs
     , llvm-hs-pure
     , mtl
+    , optparse-applicative
     , parsec >=3.0 && <4
-    , toy-language
+    , purfx
   default-language: Haskell2010
