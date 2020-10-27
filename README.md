@@ -40,3 +40,6 @@ clang -o a a.o
 The language only accepts 64-bit word for variable types. It also supports
 string literal which is useful for string formatting. Since it is linked with C
 runtime, you can import any functions in libc.
+
+What's unique from this language is that you are not allowed to create an
+effect from pure function, while effects are allowed to call any functions.

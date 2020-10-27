@@ -33,7 +33,13 @@ data CodegenState =
   CodegenState
     { symbols :: Map.Map S.Name L.Operand
     , globalStrings :: Map.Map String S.Name
+    , definitions :: Map.Map S.Name Definition
+    , currentDefinition :: S.Name
     }
+
+data Definition
+  = Pure
+  | Effect
 
 newtype Codegen a = Codegen { runCodegen :: State CodegenState a}
   deriving (Functor, Applicative, Monad, MonadState CodegenState, MonadFix)
@@ -42,6 +48,12 @@ addSym :: S.Name -> L.Operand -> Codegen ()
 addSym name addr = do
     syms <- gets symbols
     modify $ \s -> s { symbols = Map.insert name addr syms }
+    return ()
+
+addDefinition :: S.Name -> Definition -> Codegen ()
+addDefinition name def = do
+    defs <- gets definitions
+    modify $ \s -> s { definitions = Map.insert name def defs }
     return ()
 
 getOrCreateString :: String -> ModuleBuilder L.Operand
@@ -76,10 +88,24 @@ codegenExpression (S.Variable x) = getvar x
         Nothing -> error $ "Local variable not in scope: " ++ show var
 
 codegenExpression (S.Call fn args) = do
+  lift $ lift $ restricted fn
   largs <- mapM codegenExpression args
   addr <- getaddr fn
   L.call addr (callargs largs)
   where
+    restricted :: S.Name -> Codegen ()
+    restricted callee = do
+      defs <- gets definitions
+      caller <- gets currentDefinition
+      case Map.lookup caller defs of
+        Just Pure ->
+          case Map.lookup callee defs of
+            Just Pure -> return ()
+            Just Effect -> error $ "Pure function " ++ show caller ++ " are not allowed to call effect" ++ show callee
+            Nothing -> error $ "No information on callee : " ++ show callee
+        Nothing -> error $ "No information on caller : " ++ show caller
+        _ -> return ()
+
     callargs = map $ \a -> (a, [])
     getaddr :: S.Name -> IRBuilder L.Operand
     getaddr name = do
@@ -122,6 +148,8 @@ codegenDefinition (S.Pure name args body) = mdo
             syms <- gets symbols
             modify $ \s -> s { symbols = Map.insert arg op syms }
         lift $ lift $ addSym name addr
+        lift $ lift $ addDefinition name Pure
+        lift $ lift $ modify $ \s -> s { currentDefinition = name }
         rv <- codegenExpression body
         L.ret rv
     return addr
@@ -135,6 +163,8 @@ codegenDefinition (S.Effect name args body) = mdo
             syms <- gets symbols
             modify $ \s -> s { symbols = Map.insert arg op syms }
         lift $ lift $ addSym name addr
+        lift $ lift $ addDefinition name Effect
+        lift $ lift $ modify $ \s -> s { currentDefinition = name }
         rv <- codegenExpression body
         L.ret rv
     return addr
@@ -145,6 +175,7 @@ codegenDefinition (S.Effect name args body) = mdo
 codegenDefinition (S.Extern name args) = do
     addr <- L.extern (L.mkName name) [L.i64] L.i64
     lift $ addSym name addr
+    lift $ addDefinition name Effect
     return addr
 
 codegenModule :: S.Module -> Codegen L.Module
@@ -154,4 +185,4 @@ codegen :: S.Module -> L.Module
 codegen mod =
   evalState
     (runCodegen $ codegenModule mod)
-    CodegenState {symbols = Map.fromList [], globalStrings = Map.fromList []}
+    CodegenState {symbols = Map.fromList [], globalStrings = Map.fromList [], definitions = Map.fromList [], currentDefinition = ""}
