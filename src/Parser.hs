@@ -32,10 +32,15 @@ expression = P.buildExpressionParser table factor
 variable :: P.Parser Expression
 variable = Variable <$> L.identifier
 
-function :: P.Parser Definition
-function = do
-  L.reserved "func"
-  Function <$> L.identifier <*> L.parens (P.many L.identifier) <*> expression
+purefn :: P.Parser Definition
+purefn = do
+  L.reserved "pure"
+  Pure <$> L.identifier <*> L.parens (P.many L.identifier) <*> expression
+
+effect :: P.Parser Definition
+effect = do
+  L.reserved "effect"
+  Effect <$> L.identifier <*> L.parens (P.many L.identifier) <*> expression
 
 extern :: P.Parser Definition
 extern = do
@@ -66,7 +71,7 @@ conditional = do
 
 
 definition :: P.Parser Definition
-definition = P.try function P.<|> P.try extern
+definition = P.try purefn P.<|> effect P.<|> P.try extern
 
 contents :: P.Parser a -> P.Parser a
 contents p = do

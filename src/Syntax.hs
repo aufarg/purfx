@@ -13,7 +13,8 @@ data Expression
   deriving (Eq, Ord, Show)
 
 data Definition
-  = Function Name [Name] Expression
+  = Pure Name [Name] Expression
+  | Effect Name [Name] Expression
   | Extern Name [Name]
   deriving (Eq, Ord, Show)
 

@@ -116,7 +116,20 @@ codegenExpression (S.Conditional cexp exp1 exp2) = mdo
     return r
 
 codegenDefinition :: S.Definition -> ModuleBuilder L.Operand
-codegenDefinition (S.Function name args body) = mdo
+codegenDefinition (S.Pure name args body) = mdo
+    addr <- L.function (L.mkName name) argtys L.i64 $ \ops -> do
+        forM_ (zip ops args) $ \(op, arg) -> do
+            syms <- gets symbols
+            modify $ \s -> s { symbols = Map.insert arg op syms }
+        lift $ lift $ addSym name addr
+        rv <- codegenExpression body
+        L.ret rv
+    return addr
+    where
+        argtys = flip map args $ \a ->
+            (L.i64, String.fromString a)
+
+codegenDefinition (S.Effect name args body) = mdo
     addr <- L.function (L.mkName name) argtys L.i64 $ \ops -> do
         forM_ (zip ops args) $ \(op, arg) -> do
             syms <- gets symbols
